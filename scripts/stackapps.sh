@@ -1,6 +1,8 @@
 generate-stackapps \
     --about "Voting overcharged allows users to automatically vote on posts upon triggering various conditions.
 
+Inspired by [Why does accepting answers not automatically upvote them?](https://meta.stackoverflow.com/q/422246).
+
 Current version includes:
 
 | Feature                      | Default |
