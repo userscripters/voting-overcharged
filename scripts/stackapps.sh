@@ -1,13 +1,20 @@
 generate-stackapps \
-    --about "Template repository for UserScripters projects." \
-    --chrome "100.0.4896.127" \
-    --excerpt "This is a placeholder repository and should be customized upon forking" \
-    --install "https://github.com/userscripters/template/raw/master/dist/modern/index.user.js" \
-    --minified "https://github.com/userscripters/template/raw/master/dist/modern/index.min.user.js" \
+    --about "Voting overcharged allows users to automatically vote on posts upon triggering various conditions.
+
+Current version includes:
+
+| Feature                      | Default |
+| ---------------------------- | ------- |
+| Auto upvoting upon accepting | enabled |
+
+This is a \"living\" project, so the feature set is likely to be expanded upon in future versions." \
+    --chrome "108.0.5359.124" \
+    --excerpt "A userscript for automatically voting on posts depending on various conditions." \
+    --install "https://github.com/userscripters/voting-overcharged/raw/master/dist/modern/index.user.js" \
+    --minified "https://github.com/userscripters/voting-overcharged/raw/master/dist/modern/index.min.user.js" \
     --language "TypeScript" \
     --org-name "UserScripters" \
     --org-url "https://github.com/userscripters" \
     --room "https://chat.stackoverflow.com/rooms/214345" \
-    --screenshot-alt "a post being highlighted and de-highlighted after a delay" \
-    --screenshot-url "https://i.stack.imgur.com/55TGz.gif" \
-    --tag "script"
+    --tag "script" \
+    --tag "voting"
