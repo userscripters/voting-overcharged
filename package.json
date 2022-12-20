@@ -1,7 +1,7 @@
 {
-  "name": "@userscripters/template",
+  "name": "@userscripters/voting-overcharged",
   "version": "0.1.0",
-  "description": "template repository for userscripters' projects",
+  "description": "A userscript for automatically voting on posts depending on various conditions",
   "scripts": {
     "test": "mocha",
     "lint": "eslint src --fix --ext .js,.ts",
@@ -19,27 +19,23 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/userscripters/template.git"
+    "url": "git+https://github.com/userscripters/voting-overcharged.git"
   },
   "keywords": [
     "userscripts",
-    "stackoverflow"
+    "stackoverflow",
+    "voting"
   ],
   "author": {
-    "name": "Jane Doe",
-    "email": "jane@doe.com"
+    "name": "Oleg Valter",
+    "email": "oleg.a.valter@gmail.com"
   },
-  "contributors": [
-    {
-      "name": "John Doe",
-      "email": "john@doe.com"
-    }
-  ],
+  "contributors": [],
   "license": "GPL-3.0-or-later",
   "bugs": {
-    "url": "https://github.com/userscripters/template/issues"
+    "url": "https://github.com/userscripters/voting-overcharged/issues"
   },
-  "homepage": "https://github.com/userscripters/template#readme",
+  "homepage": "https://github.com/userscripters/voting-overcharged#readme",
   "devDependencies": {
     "@types/chai": "^4.3.4",
     "@types/chai-as-promised": "^7.1.5",

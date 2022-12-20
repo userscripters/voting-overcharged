@@ -1,4 +1,4 @@
-Template - template repository for userscripters' projects
+Voting Overcharged - A userscript for automatically voting on posts depending on various conditions
 
 script
 
@@ -26,6 +26,7 @@ Latest version: 0.1.0
 
 [Install](https://github.com/userscripters/template/raw/master/dist/modern/index.user.js) | [Minified](https://github.com/userscripters/template/raw/master/dist/modern/index.min.user.js)
 
+
 ### Platform
 
 Version number means "last tested on":
@@ -42,19 +43,16 @@ Version number means "last tested on":
 
 ## Contact
 
-Author: Jane Doe
+Author: Oleg Valter
 <br>Organization: [UserScripters](https://github.com/userscripters)
 
-Contributors:
-<br>John Doe
-
-Please, submit bug reports [on the source repository](https://github.com/userscripters/template/issues).
+Please, submit bug reports [on the source repository](https://github.com/userscripters/voting-overcharged/issues).
 <br>Before adding a new one, please check if it hasn't been raised before.
 
 You can also [drop by to chat](https://chat.stackoverflow.com/rooms/214345), we are a friendly bunch.
 
 ## Code
 
-[Source code](https://github.com/userscripters/template/blob/master/src/index.ts) is written in TypeScript.
+[Source code](https://github.com/userscripters/voting-overcharged/blob/master/src/index.ts) is written in TypeScript.
 
-Contributions are welcome, you can always [submit a PR here](https://github.com/userscripters/template/pulls).
+Contributions are welcome, you can always [submit a PR here](https://github.com/userscripters/voting-overcharged/pulls).
