@@ -1,6 +1,6 @@
 {
   "name": "@userscripters/voting-overcharged",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A userscript for automatically voting on posts depending on various conditions",
   "scripts": {
     "test": "mocha",

@@ -1,20 +1,25 @@
 Voting Overcharged - A userscript for automatically voting on posts depending on various conditions
 
-script
+script voting
 
 
 <!-- thumbnail:  -->
-<!-- version: 0.1.0 -->
+<!-- version: 1.0.0 -->
 <!-- tag: script -->
-<!-- excerpt: This is a placeholder repository and should be customized upon forking -->
+<!-- excerpt: A userscript for automatically voting on posts depending on various conditions. -->
 
-## Screenshot
-
-![a post being highlighted and de-highlighted after a delay](https://i.stack.imgur.com/55TGz.gif)
 
 ## About
 
-Template repository for UserScripters projects.
+Voting overcharged allows users to automatically vote on posts upon triggering various conditions.
+
+Current version includes:
+
+| Feature                      | Default |
+| ---------------------------- | ------- |
+| Auto upvoting upon accepting | enabled |
+
+This is a "living" project, so the feature set is likely to be expanded upon in future versions.
 
 ### License
 
@@ -22,9 +27,9 @@ The script is licensed under the [GPL-3.0-or-later](https://spdx.org/licenses/GP
 
 ### Download
 
-Latest version: 0.1.0
+Latest version: 1.0.0
 
-[Install](https://github.com/userscripters/template/raw/master/dist/modern/index.user.js) | [Minified](https://github.com/userscripters/template/raw/master/dist/modern/index.min.user.js)
+[Install](https://github.com/userscripters/voting-overcharged/raw/master/dist/modern/index.user.js) | [Minified](https://github.com/userscripters/voting-overcharged/raw/master/dist/modern/index.min.user.js)
 
 
 ### Platform
@@ -33,13 +38,13 @@ Version number means "last tested on":
 
 | Chrome | Edge | Explorer | Firefox | Opera |
 | - | - | - | - | - |
-| ✔ 100.0.4896.127 | - | - | - | - |
+| ✔ 108.0.5359.124 | - | - | - | - |
 
 ## Change log
 
 | Version    | Description |
 | ---------- | ----------- |
-| 0.1.0 |             |
+| 1.0.0 |             |
 
 ## Contact
 

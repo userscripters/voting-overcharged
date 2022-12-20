@@ -6,9 +6,17 @@
 | Name | @userscripters/voting-overcharged |
 | Description | A userscript for automatically voting on posts depending on various conditions |
 | License | [GPL-3.0-or-later](https://spdx.org/licenses/GPL-3.0-or-later) |
-| Version | 0.1.0 |
+| Version | 1.0.0 |
 
-Template repository for UserScripters projects
+Voting overcharged allows users to automatically vote on posts upon triggering various conditions.
+
+Current version includes:
+
+| Feature                      | Default |
+| ---------------------------- | ------- |
+| Auto upvoting upon accepting | enabled |
+
+This is a "living" project, so the feature set is likely to be expanded upon in future versions.
 
 # Support
 
