@@ -13,6 +13,60 @@ interface PostVoteResponse {
 
 const scriptName = "voting-overcharged";
 
+/**
+ * @summary initializes userscript configuration
+ */
+const initScriptConfiguration = ():
+    | UserScripters.Userscript<UserScripters.AsyncStorage>
+    | undefined => {
+    const { Configurer } = unsafeWindow.UserScripters?.Userscripts || {};
+    if (!Configurer) {
+        console.debug(`[${scriptName}] missing userscript configurer`);
+        return;
+    }
+
+    const script = Configurer.register(
+        scriptName,
+        window.Store?.locateStorage()
+    );
+
+    const commonConfig: Omit<
+        UserScripters.UserscriptToggleOption,
+        "desc" | "name"
+    > = {
+        def: false,
+        direction: "left",
+        type: "toggle",
+    };
+
+    script.options(
+        {
+            "downvote-on-close": {
+                def: false,
+                desc: "Auto downvote when voting to close",
+            },
+            "upvote-on-accept": {
+                def: true,
+                desc: "Auto upvote upon accepting",
+            },
+        },
+        commonConfig
+    );
+
+    return script;
+};
+
+/**
+ * @summary loads a configuration option
+ * @param name option name
+ * @param def default value
+ */
+const loadConfigOption = async <T>(name: string, def: T) => {
+    const { Configurer } = unsafeWindow.UserScripters?.Userscripts || {};
+    const script = Configurer?.get(scriptName);
+    return script ? script.load(name, def) : def;
+};
+
 const voteOnPost = async (
     postId: number | string,
     voteTypeId: StackExchange.VoteTypeId
@@ -46,6 +100,12 @@ const voteOnPost = async (
     }
 };
 
+/**
+ * @summary sends an auto vote
+ * @param voteTypeId id of the vote
+ * @param url URL of the voting endpoint
+ * @param xhr a {@link JQuery.jqXHR} object
+ */
 const handleAutovote = async (
     voteTypeId: StackExchange.VoteTypeId,
     url: string,
@@ -68,33 +128,65 @@ const handleAutovote = async (
     return voteOnPost(postId, voteTypeId);
 };
 
+/**
+ * @summary handles AJAX voting requests
+ * @param voteTypeId id of the vote
+ * @param url URL of the voting endpoint
+ * @param xhr a {@link JQuery.jqXHR} object
+ */
+const handleVoteComplete = async (
+    voteTypeId: StackExchange.VoteTypeId,
+    url: string,
+    xhr: JQuery.jqXHR
+) => {
+    const { voteTypeIds } = StackExchange.vote;
+
+    const upvoteOnAccept = await loadConfigOption("upvote-on-accept", true);
+    const downvoteOnClose = await loadConfigOption("downvote-on-close", false);
+
+    const handlerPromises: Promise<boolean>[] = [];
+
+    if (upvoteOnAccept && voteTypeId === voteTypeIds.acceptedByOwner) {
+        handlerPromises.push(handleAutovote(voteTypeIds.upMod, url, xhr));
+    }
+
+    if (downvoteOnClose && voteTypeId === voteTypeIds.close) {
+        handlerPromises.push(handleAutovote(voteTypeIds.downMod, url, xhr));
+    }
+
+    const status = await Promise.all(handlerPromises);
+
+    if (!status) {
+        StackExchange.helpers.showToast(
+            "Something went wrong during autovote",
+            { type: "danger" }
+        );
+    }
+};
+
 window.addEventListener(
     "load",
     async () => {
         StackExchange?.ready(() => {
-            const { acceptedByOwner, upMod } = StackExchange.vote.voteTypeIds;
+            initScriptConfiguration();
 
-            // https://regex101.com/r/8KyhyR/1
-            const acceptVoteRegExp = new RegExp(
-                `\\/posts\\/\\d+\/vote\\/${acceptedByOwner}`
-            );
+            // https://regex101.com/r/8KyhyR/2
+            const voteTypeRegExp = /\/posts\/\d+\/vote\/(\d+)/;
 
             $(document).ajaxComplete((_event, xhr, options) => {
                 const { url } = options;
 
-                if (!url || !acceptVoteRegExp.test(url)) {
-                    console.debug(`[${scriptName}] URL not matched: ${url}`);
+                if (!url) {
+                    console.debug(`[${scriptName}] missing URL: ${url}`);
                     return;
                 }
 
-                handleAutovote(upMod, url, xhr).then((status) => {
-                    if (!status) {
-                        StackExchange.helpers.showToast(
-                            "Something went wrong during autovote",
-                            { type: "danger" }
-                        );
-                    }
-                });
+                const [, voteTypeId] = voteTypeRegExp.exec(url) || [];
+
+                if (!Number.isNaN(+voteTypeId)) {
+                    handleVoteComplete(+voteTypeId, url, xhr);
+                    return;
+                }
             });
         });
     },
