@@ -5,9 +5,10 @@ Inspired by [Why does accepting answers not automatically upvote them?](https://
 
 Current version includes:
 
-| Feature                      | Default |
-| ---------------------------- | ------- |
-| Auto upvoting upon accepting | enabled |
+| Feature                              | Default  |
+| ------------------------------------ | -------- |
+| Auto upvoting upon accepting         | enabled  |
+| Auto downvoting upon voting to close | disabled |
 
 This is a \"living\" project, so the feature set is likely to be expanded upon in future versions." \
     --chrome "108.0.5359.124" \

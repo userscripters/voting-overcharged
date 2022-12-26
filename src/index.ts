@@ -117,8 +117,8 @@ const handleAutovote = async (
         console.debug(`[${scriptName}] accept vote was unsuccessful`, Message);
         return false;
     }
-    // https://regex101.com/r/NX7PMb/1
-    const [_, postId] = /\/posts\/(\d+)\//.exec(url) || [];
+    // https://regex101.com/r/NX7PMb/2
+    const [_, postId] = /\/(?:posts|questions)\/(\d+)\//.exec(url) || [];
 
     if (Number.isNaN(+postId)) {
         console.debug(`[${scriptName}] invalid post id: ${postId}`);
@@ -150,7 +150,9 @@ const handleVoteComplete = async (
         handlerPromises.push(handleAutovote(voteTypeIds.upMod, url, xhr));
     }
 
-    if (downvoteOnClose && voteTypeId === voteTypeIds.close) {
+    const isVTC = voteTypeId === voteTypeIds.close || /\/close\/add/.test(url);
+
+    if (downvoteOnClose && isVTC) {
         handlerPromises.push(handleAutovote(voteTypeIds.downMod, url, xhr));
     }
 
@@ -183,10 +185,7 @@ window.addEventListener(
 
                 const [, voteTypeId] = voteTypeRegExp.exec(url) || [];
 
-                if (!Number.isNaN(+voteTypeId)) {
-                    handleVoteComplete(+voteTypeId, url, xhr);
-                    return;
-                }
+                handleVoteComplete(+voteTypeId, url, xhr);
             });
         });
     },
