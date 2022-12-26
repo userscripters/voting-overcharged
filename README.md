@@ -6,7 +6,7 @@
 | Name | @userscripters/voting-overcharged |
 | Description | A userscript for automatically voting on posts depending on various conditions |
 | License | [GPL-3.0-or-later](https://spdx.org/licenses/GPL-3.0-or-later) |
-| Version | 1.0.0 |
+| Version | 1.1.0 |
 
 Voting overcharged allows users to automatically vote on posts upon triggering various conditions.
 
@@ -14,9 +14,10 @@ Inspired by [Why does accepting answers not automatically upvote them?](https://
 
 Current version includes:
 
-| Feature                      | Default |
-| ---------------------------- | ------- |
-| Auto upvoting upon accepting | enabled |
+| Feature                              | Default  |
+| ------------------------------------ | -------- |
+| Auto upvoting upon accepting         | enabled  |
+| Auto downvoting upon voting to close | disabled |
 
 This is a "living" project, so the feature set is likely to be expanded upon in future versions.
 

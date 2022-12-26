@@ -2,7 +2,9 @@
 // @name           Voting Overcharged
 // @author         Oleg Valter <oleg.a.valter@gmail.com>
 // @description    A userscript for automatically voting on posts depending on various conditions
-// @grant          none
+// @grant          unsafeWindow
+// @grant          GM_getValue
+// @grant          GM_setValue
 // @homepage       https://github.com/userscripters/voting-overcharged#readme
 // @match          https://stackoverflow.com/questions/*
 // @match          https://serverfault.com/questions/*
@@ -25,8 +27,9 @@
 // @match          https://ru.meta.stackoverflow.com/questions/*
 // @match          https://es.meta.stackoverflow.com/questions/*
 // @namespace      userscripters
+// @require        https://raw.githubusercontent.com/userscripters/storage/master/dist/browser.js
 // @run-at         document-start
 // @source         git+https://github.com/userscripters/voting-overcharged.git
 // @supportURL     https://github.com/userscripters/voting-overcharged/issues
-// @version        1.0.0
+// @version        1.1.0
 // ==/UserScript==

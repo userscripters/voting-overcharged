@@ -2,7 +2,9 @@
 // @name           Voting Overcharged
 // @author         Oleg Valter <oleg.a.valter@gmail.com>
 // @description    A userscript for automatically voting on posts depending on various conditions
-// @grant          none
+// @grant          unsafeWindow
+// @grant          GM_getValue
+// @grant          GM_setValue
 // @homepage       https://github.com/userscripters/voting-overcharged#readme
 // @match          https://stackoverflow.com/questions/*
 // @match          https://serverfault.com/questions/*
@@ -25,10 +27,11 @@
 // @match          https://ru.meta.stackoverflow.com/questions/*
 // @match          https://es.meta.stackoverflow.com/questions/*
 // @namespace      userscripters
+// @require        https://raw.githubusercontent.com/userscripters/storage/master/dist/browser.js
 // @run-at         document-start
 // @source         git+https://github.com/userscripters/voting-overcharged.git
 // @supportURL     https://github.com/userscripters/voting-overcharged/issues
-// @version        1.0.0
+// @version        1.1.0
 // ==/UserScript==
 
-"use strict";const scriptName="voting-overcharged",voteOnPost=async(t,e)=>{try{var o=new URL(location.origin+`/posts/${t}/vote/`+e),s=new FormData;s.set("fkey",StackExchange.options.user.fkey);var{Message:a,Success:n}=await(await fetch(o,{method:"POST",body:s})).json();return n||console.debug(`[${scriptName}] error when voting on post #`+t,a),n}catch(e){return console.debug(`[${scriptName}] failed to vote on post #`+t,e),!1}},handleAutovote=async(e,t,o)=>{var s,{Message:o,Success:a}=o.responseJSON;return a?([s,a]=/\/posts\/(\d+)\//.exec(t)||[],Number.isNaN(+a)?(console.debug(`[${scriptName}] invalid post id: `+a),!1):voteOnPost(a,e)):(console.debug(`[${scriptName}] accept vote was unsuccessful`,o),!1)};window.addEventListener("load",async()=>{null!==StackExchange&&void 0!==StackExchange&&StackExchange.ready(()=>{const{acceptedByOwner:e,upMod:s}=StackExchange.vote.voteTypeIds,a=new RegExp("\\/posts\\/\\d+/vote\\/"+e);$(document).ajaxComplete((e,t,o)=>{o=o.url;o&&a.test(o)?handleAutovote(s,o,t).then(e=>{e||StackExchange.helpers.showToast("Something went wrong during autovote",{type:"danger"})}):console.debug(`[${scriptName}] URL not matched: `+o)})})},{once:!0});
+"use strict";const scriptName="voting-overcharged",initScriptConfiguration=()=>{var e=((null==(e=unsafeWindow.UserScripters)?void 0:e.Userscripts)||{})["Configurer"];if(e)return(e=e.register(scriptName,null==(e=window.Store)?void 0:e.locateStorage())).options({"downvote-on-close":{def:!1,desc:"Auto downvote when voting to close"},"upvote-on-accept":{def:!0,desc:"Auto upvote upon accepting"}},{def:!1,direction:"left",type:"toggle"}),e;console.debug(`[${scriptName}] missing userscript configurer`)},loadConfigOption=async(e,o)=>{var t=((null==(t=unsafeWindow.UserScripters)?void 0:t.Userscripts)||{})["Configurer"],t=null==t?void 0:t.get(scriptName);return t?t.load(e,o):o},voteOnPost=async(o,e)=>{try{var t=new URL(location.origin+`/posts/${o}/vote/`+e),n=new FormData;n.set("fkey",StackExchange.options.user.fkey);var{Message:s,Success:a}=await(await fetch(t,{method:"POST",body:n})).json();return a||console.debug(`[${scriptName}] error when voting on post #`+o,s),a}catch(e){return console.debug(`[${scriptName}] failed to vote on post #`+o,e),!1}},handleAutovote=async(e,o,t)=>{var n,{Message:t,Success:s}=t.responseJSON;return s?([n,s]=/\/(?:posts|questions)\/(\d+)\//.exec(o)||[],Number.isNaN(+s)?(console.debug(`[${scriptName}] invalid post id: `+s),!1):voteOnPost(s,e)):(console.debug(`[${scriptName}] accept vote was unsuccessful`,t),!1)},handleVoteComplete=async(e,o,t)=>{var n=StackExchange.vote["voteTypeIds"],s=await loadConfigOption("upvote-on-accept",!0),a=await loadConfigOption("downvote-on-close",!1),c=[],s=(s&&e===n.acceptedByOwner&&c.push(handleAutovote(n.upMod,o,t)),e===n.close||/\/close\/add/.test(o)),e=(a&&s&&c.push(handleAutovote(n.downMod,o,t)),await Promise.all(c));e||StackExchange.helpers.showToast("Something went wrong during autovote",{type:"danger"})};window.addEventListener("load",async()=>{null!==StackExchange&&void 0!==StackExchange&&StackExchange.ready(()=>{initScriptConfiguration();const s=/\/posts\/\d+\/vote\/(\d+)/;$(document).ajaxComplete((e,o,t)=>{var n,t=t["url"];t?([,n]=s.exec(t)||[],handleVoteComplete(+n,t,o)):console.debug(`[${scriptName}] missing URL: `+t)})})},{once:!0});

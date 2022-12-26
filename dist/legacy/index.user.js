@@ -2,7 +2,9 @@
 // @name           Voting Overcharged
 // @author         Oleg Valter <oleg.a.valter@gmail.com>
 // @description    A userscript for automatically voting on posts depending on various conditions
-// @grant          none
+// @grant          unsafeWindow
+// @grant          GM_getValue
+// @grant          GM_setValue
 // @homepage       https://github.com/userscripters/voting-overcharged#readme
 // @match          https://stackoverflow.com/questions/*
 // @match          https://serverfault.com/questions/*
@@ -25,10 +27,11 @@
 // @match          https://ru.meta.stackoverflow.com/questions/*
 // @match          https://es.meta.stackoverflow.com/questions/*
 // @namespace      userscripters
+// @require        https://raw.githubusercontent.com/userscripters/storage/master/dist/browser.js
 // @run-at         document-start
 // @source         git+https://github.com/userscripters/voting-overcharged.git
 // @supportURL     https://github.com/userscripters/voting-overcharged/issues
-// @version        1.0.0
+// @version        1.1.0
 // ==/UserScript==
 
 "use strict";
@@ -85,6 +88,40 @@ var __read = (this && this.__read) || function (o, n) {
     return ar;
 };
 var scriptName = "voting-overcharged";
+var initScriptConfiguration = function () {
+    var _a, _b;
+    var Configurer = (((_a = unsafeWindow.UserScripters) === null || _a === void 0 ? void 0 : _a.Userscripts) || {}).Configurer;
+    if (!Configurer) {
+        console.debug("[".concat(scriptName, "] missing userscript configurer"));
+        return;
+    }
+    var script = Configurer.register(scriptName, (_b = window.Store) === null || _b === void 0 ? void 0 : _b.locateStorage());
+    var commonConfig = {
+        def: false,
+        direction: "left",
+        type: "toggle",
+    };
+    script.options({
+        "downvote-on-close": {
+            def: false,
+            desc: "Auto downvote when voting to close",
+        },
+        "upvote-on-accept": {
+            def: true,
+            desc: "Auto upvote upon accepting",
+        },
+    }, commonConfig);
+    return script;
+};
+var loadConfigOption = function (name, def) { return __awaiter(void 0, void 0, void 0, function () {
+    var Configurer, script;
+    var _a;
+    return __generator(this, function (_b) {
+        Configurer = (((_a = unsafeWindow.UserScripters) === null || _a === void 0 ? void 0 : _a.Userscripts) || {}).Configurer;
+        script = Configurer === null || Configurer === void 0 ? void 0 : Configurer.get(scriptName);
+        return [2, script ? script.load(name, def) : def];
+    });
+}); };
 var voteOnPost = function (postId, voteTypeId) { return __awaiter(void 0, void 0, void 0, function () {
     var voteURL, body, res, _a, Message, Success, error_1;
     return __generator(this, function (_b) {
@@ -120,7 +157,7 @@ var handleAutovote = function (voteTypeId, url, xhr) { return __awaiter(void 0, 
             console.debug("[".concat(scriptName, "] accept vote was unsuccessful"), Message);
             return [2, false];
         }
-        _b = __read(/\/posts\/(\d+)\//.exec(url) || [], 2), _ = _b[0], postId = _b[1];
+        _b = __read(/\/(?:posts|questions)\/(\d+)\//.exec(url) || [], 2), _ = _b[0], postId = _b[1];
         if (Number.isNaN(+postId)) {
             console.debug("[".concat(scriptName, "] invalid post id: ").concat(postId));
             return [2, false];
@@ -128,22 +165,49 @@ var handleAutovote = function (voteTypeId, url, xhr) { return __awaiter(void 0, 
         return [2, voteOnPost(postId, voteTypeId)];
     });
 }); };
+var handleVoteComplete = function (voteTypeId, url, xhr) { return __awaiter(void 0, void 0, void 0, function () {
+    var voteTypeIds, upvoteOnAccept, downvoteOnClose, handlerPromises, isVTC, status;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                voteTypeIds = StackExchange.vote.voteTypeIds;
+                return [4, loadConfigOption("upvote-on-accept", true)];
+            case 1:
+                upvoteOnAccept = _a.sent();
+                return [4, loadConfigOption("downvote-on-close", false)];
+            case 2:
+                downvoteOnClose = _a.sent();
+                handlerPromises = [];
+                if (upvoteOnAccept && voteTypeId === voteTypeIds.acceptedByOwner) {
+                    handlerPromises.push(handleAutovote(voteTypeIds.upMod, url, xhr));
+                }
+                isVTC = voteTypeId === voteTypeIds.close || /\/close\/add/.test(url);
+                if (downvoteOnClose && isVTC) {
+                    handlerPromises.push(handleAutovote(voteTypeIds.downMod, url, xhr));
+                }
+                return [4, Promise.all(handlerPromises)];
+            case 3:
+                status = _a.sent();
+                if (!status) {
+                    StackExchange.helpers.showToast("Something went wrong during autovote", { type: "danger" });
+                }
+                return [2];
+        }
+    });
+}); };
 window.addEventListener("load", function () { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         StackExchange === null || StackExchange === void 0 ? void 0 : StackExchange.ready(function () {
-            var _a = StackExchange.vote.voteTypeIds, acceptedByOwner = _a.acceptedByOwner, upMod = _a.upMod;
-            var acceptVoteRegExp = new RegExp("\\/posts\\/\\d+/vote\\/".concat(acceptedByOwner));
+            initScriptConfiguration();
+            var voteTypeRegExp = /\/posts\/\d+\/vote\/(\d+)/;
             $(document).ajaxComplete(function (_event, xhr, options) {
                 var url = options.url;
-                if (!url || !acceptVoteRegExp.test(url)) {
-                    console.debug("[".concat(scriptName, "] URL not matched: ").concat(url));
+                if (!url) {
+                    console.debug("[".concat(scriptName, "] missing URL: ").concat(url));
                     return;
                 }
-                handleAutovote(upMod, url, xhr).then(function (status) {
-                    if (!status) {
-                        StackExchange.helpers.showToast("Something went wrong during autovote", { type: "danger" });
-                    }
-                });
+                var _a = __read(voteTypeRegExp.exec(url) || [], 2), voteTypeId = _a[1];
+                handleVoteComplete(+voteTypeId, url, xhr);
             });
         });
         return [2];

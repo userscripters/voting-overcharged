@@ -4,7 +4,7 @@ script voting
 
 
 <!-- thumbnail:  -->
-<!-- version: 1.0.0 -->
+<!-- version: 1.1.0 -->
 <!-- tag: script -->
 <!-- excerpt: A userscript for automatically voting on posts depending on various conditions. -->
 
@@ -17,9 +17,10 @@ Inspired by [Why does accepting answers not automatically upvote them?](https://
 
 Current version includes:
 
-| Feature                      | Default |
-| ---------------------------- | ------- |
-| Auto upvoting upon accepting | enabled |
+| Feature                              | Default  |
+| ------------------------------------ | -------- |
+| Auto upvoting upon accepting         | enabled  |
+| Auto downvoting upon voting to close | disabled |
 
 This is a "living" project, so the feature set is likely to be expanded upon in future versions.
 
@@ -29,7 +30,7 @@ The script is licensed under the [GPL-3.0-or-later](https://spdx.org/licenses/GP
 
 ### Download
 
-Latest version: 1.0.0
+Latest version: 1.1.0
 
 [Install](https://github.com/userscripters/voting-overcharged/raw/master/dist/modern/index.user.js) | [Minified](https://github.com/userscripters/voting-overcharged/raw/master/dist/modern/index.min.user.js)
 
@@ -46,7 +47,7 @@ Version number means "last tested on":
 
 | Version    | Description |
 | ---------- | ----------- |
-| 1.0.0 |             |
+| 1.1.0 |             |
 
 ## Contact
 
