@@ -43,11 +43,19 @@ const initScriptConfiguration = ():
         {
             "downvote-on-close": {
                 def: false,
-                desc: "Auto downvote when voting to close",
+                desc: "Auto downvote question upon voting to close",
             },
             "upvote-on-accept": {
                 def: true,
-                desc: "Auto upvote upon accepting",
+                desc: "Auto upvote question upon accepting",
+            },
+            "upvote-q-on-upvote-a": {
+                def: false,
+                desc: "Auto upvote question upon upvoting an answer",
+            },
+            "downvote-q-on-downvote-a": {
+                def: false,
+                desc: "Auto downvote question upon downvoting an answer",
             },
         },
         commonConfig
@@ -67,14 +75,24 @@ const loadConfigOption = async <T>(name: string, def: T) => {
     return script ? script.load(name, def) : def;
 };
 
+/**
+ * @summary makes a post vote URL from a given post id and vote type id
+ * @param postId id of the post to vote on
+ * @param voteTypeId vote type id
+ */
+const getPostVoteURL = (
+    postId: number | string,
+    voteTypeId: StackExchange.VoteTypeId
+) => {
+    return new URL(`${location.origin}/posts/${postId}/vote/${voteTypeId}`);
+};
+
 const voteOnPost = async (
     postId: number | string,
     voteTypeId: StackExchange.VoteTypeId
 ) => {
     try {
-        const voteURL = new URL(
-            `${location.origin}/posts/${postId}/vote/${voteTypeId}`
-        );
+        const voteURL = getPostVoteURL(postId, voteTypeId);
 
         const body = new FormData();
         body.set("fkey", StackExchange.options.user.fkey);
@@ -108,17 +126,19 @@ const voteOnPost = async (
  */
 const handleAutovote = async (
     voteTypeId: StackExchange.VoteTypeId,
-    url: string,
+    url: string | URL,
     xhr: JQuery.jqXHR
 ) => {
     const { Message, Success } = xhr.responseJSON as PostVoteResponse;
 
     if (!Success) {
-        console.debug(`[${scriptName}] accept vote was unsuccessful`, Message);
+        console.debug(`[${scriptName}] vote was unsuccessful`, Message);
         return false;
     }
+
     // https://regex101.com/r/NX7PMb/2
-    const [_, postId] = /\/(?:posts|questions)\/(\d+)\//.exec(url) || [];
+    const [_, postId] =
+        /\/(?:posts|questions)\/(\d+)\//.exec(url.toString()) || [];
 
     if (Number.isNaN(+postId)) {
         console.debug(`[${scriptName}] invalid post id: ${postId}`);
@@ -131,11 +151,13 @@ const handleAutovote = async (
 /**
  * @summary handles AJAX voting requests
  * @param voteTypeId id of the vote
+ * @param postType type of the post the vote is on
  * @param url URL of the voting endpoint
  * @param xhr a {@link JQuery.jqXHR} object
  */
 const handleVoteComplete = async (
     voteTypeId: StackExchange.VoteTypeId,
+    postType: "question" | "answer",
     url: string,
     xhr: JQuery.jqXHR
 ) => {
@@ -144,16 +166,54 @@ const handleVoteComplete = async (
     const upvoteOnAccept = await loadConfigOption("upvote-on-accept", true);
     const downvoteOnClose = await loadConfigOption("downvote-on-close", false);
 
+    const upvoteQOnUpvoteA = await loadConfigOption(
+        "upvote-q-on-upvote-a",
+        false
+    );
+    const downvoteQOnDownvoteA = await loadConfigOption(
+        "downvote-q-on-downvote-a",
+        false
+    );
+
     const handlerPromises: Promise<boolean>[] = [];
 
-    if (upvoteOnAccept && voteTypeId === voteTypeIds.acceptedByOwner) {
+    const isAnswerVote = postType === "answer";
+
+    const questionId = StackExchange.question.getQuestionId();
+
+    const questionUpvoteURL = getPostVoteURL(questionId, voteTypeIds.upMod);
+    const questionDownvoteURL = getPostVoteURL(questionId, voteTypeIds.downMod);
+
+    if (
+        isAnswerVote &&
+        upvoteOnAccept &&
+        voteTypeId === voteTypeIds.acceptedByOwner
+    ) {
         handlerPromises.push(handleAutovote(voteTypeIds.upMod, url, xhr));
+    }
+
+    if (isAnswerVote && upvoteQOnUpvoteA && voteTypeId === voteTypeIds.upMod) {
+        handlerPromises.push(
+            handleAutovote(voteTypeIds.upMod, questionUpvoteURL, xhr)
+        );
+    }
+
+    if (
+        isAnswerVote &&
+        downvoteQOnDownvoteA &&
+        voteTypeId === voteTypeIds.downMod
+    ) {
+        handlerPromises.push(
+            handleAutovote(voteTypeIds.downMod, questionDownvoteURL, xhr)
+        );
     }
 
     const isVTC = voteTypeId === voteTypeIds.close || /\/close\/add/.test(url);
 
     if (downvoteOnClose && isVTC) {
-        handlerPromises.push(handleAutovote(voteTypeIds.downMod, url, xhr));
+        handlerPromises.push(
+            handleAutovote(voteTypeIds.downMod, questionDownvoteURL, xhr)
+        );
     }
 
     const status = await Promise.all(handlerPromises);
@@ -173,7 +233,7 @@ window.addEventListener(
             initScriptConfiguration();
 
             // https://regex101.com/r/8KyhyR/2
-            const voteTypeRegExp = /\/posts\/\d+\/vote\/(\d+)/;
+            const voteTypeRegExp = /\/posts\/(\d+)\/vote\/(\d+)/;
 
             $(document).ajaxComplete((_event, xhr, options) => {
                 const { url } = options;
@@ -183,9 +243,14 @@ window.addEventListener(
                     return;
                 }
 
-                const [, voteTypeId] = voteTypeRegExp.exec(url) || [];
+                const [, postId, voteTypeId] = voteTypeRegExp.exec(url) || [];
 
-                handleVoteComplete(+voteTypeId, url, xhr);
+                const postType =
+                    StackExchange.question.getQuestionId() === +postId
+                        ? "question"
+                        : "answer";
+
+                handleVoteComplete(+voteTypeId, postType, url, xhr);
             });
         });
     },
