@@ -31,5 +31,5 @@
 // @run-at         document-start
 // @source         git+https://github.com/userscripters/voting-overcharged.git
 // @supportURL     https://github.com/userscripters/voting-overcharged/issues
-// @version        1.1.0
+// @version        1.2.0
 // ==/UserScript==

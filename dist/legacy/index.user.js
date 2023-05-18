@@ -31,7 +31,7 @@
 // @run-at         document-start
 // @source         git+https://github.com/userscripters/voting-overcharged.git
 // @supportURL     https://github.com/userscripters/voting-overcharged/issues
-// @version        1.1.0
+// @version        1.2.0
 // ==/UserScript==
 
 "use strict";
@@ -104,11 +104,19 @@ var initScriptConfiguration = function () {
     script.options({
         "downvote-on-close": {
             def: false,
-            desc: "Auto downvote when voting to close",
+            desc: "Auto downvote question upon voting to close",
         },
         "upvote-on-accept": {
             def: true,
-            desc: "Auto upvote upon accepting",
+            desc: "Auto upvote question upon accepting",
+        },
+        "upvote-q-on-upvote-a": {
+            def: false,
+            desc: "Auto upvote question upon upvoting an answer",
+        },
+        "downvote-q-on-downvote-a": {
+            def: false,
+            desc: "Auto downvote question upon downvoting an answer",
         },
     }, commonConfig);
     return script;
@@ -122,13 +130,16 @@ var loadConfigOption = function (name, def) { return __awaiter(void 0, void 0, v
         return [2, script ? script.load(name, def) : def];
     });
 }); };
+var getPostVoteURL = function (postId, voteTypeId) {
+    return new URL("".concat(location.origin, "/posts/").concat(postId, "/vote/").concat(voteTypeId));
+};
 var voteOnPost = function (postId, voteTypeId) { return __awaiter(void 0, void 0, void 0, function () {
     var voteURL, body, res, _a, Message, Success, error_1;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
                 _b.trys.push([0, 3, , 4]);
-                voteURL = new URL("".concat(location.origin, "/posts/").concat(postId, "/vote/").concat(voteTypeId));
+                voteURL = getPostVoteURL(postId, voteTypeId);
                 body = new FormData();
                 body.set("fkey", StackExchange.options.user.fkey);
                 return [4, fetch(voteURL, { method: "POST", body: body })];
@@ -154,10 +165,10 @@ var handleAutovote = function (voteTypeId, url, xhr) { return __awaiter(void 0, 
     return __generator(this, function (_c) {
         _a = xhr.responseJSON, Message = _a.Message, Success = _a.Success;
         if (!Success) {
-            console.debug("[".concat(scriptName, "] accept vote was unsuccessful"), Message);
+            console.debug("[".concat(scriptName, "] vote was unsuccessful"), Message);
             return [2, false];
         }
-        _b = __read(/\/(?:posts|questions)\/(\d+)\//.exec(url) || [], 2), _ = _b[0], postId = _b[1];
+        _b = __read(/\/(?:posts|questions)\/(\d+)\//.exec(url.toString()) || [], 2), _ = _b[0], postId = _b[1];
         if (Number.isNaN(+postId)) {
             console.debug("[".concat(scriptName, "] invalid post id: ").concat(postId));
             return [2, false];
@@ -165,8 +176,8 @@ var handleAutovote = function (voteTypeId, url, xhr) { return __awaiter(void 0, 
         return [2, voteOnPost(postId, voteTypeId)];
     });
 }); };
-var handleVoteComplete = function (voteTypeId, url, xhr) { return __awaiter(void 0, void 0, void 0, function () {
-    var voteTypeIds, upvoteOnAccept, downvoteOnClose, handlerPromises, isVTC, status;
+var handleVoteComplete = function (voteTypeId, postType, url, xhr) { return __awaiter(void 0, void 0, void 0, function () {
+    var voteTypeIds, upvoteOnAccept, downvoteOnClose, upvoteQOnUpvoteA, downvoteQOnDownvoteA, handlerPromises, isAnswerVote, questionId, questionUpvoteURL, questionDownvoteURL, isVTC, status;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
@@ -177,16 +188,36 @@ var handleVoteComplete = function (voteTypeId, url, xhr) { return __awaiter(void
                 return [4, loadConfigOption("downvote-on-close", false)];
             case 2:
                 downvoteOnClose = _a.sent();
+                return [4, loadConfigOption("upvote-q-on-upvote-a", false)];
+            case 3:
+                upvoteQOnUpvoteA = _a.sent();
+                return [4, loadConfigOption("downvote-q-on-downvote-a", false)];
+            case 4:
+                downvoteQOnDownvoteA = _a.sent();
                 handlerPromises = [];
-                if (upvoteOnAccept && voteTypeId === voteTypeIds.acceptedByOwner) {
+                isAnswerVote = postType === "answer";
+                questionId = StackExchange.question.getQuestionId();
+                questionUpvoteURL = getPostVoteURL(questionId, voteTypeIds.upMod);
+                questionDownvoteURL = getPostVoteURL(questionId, voteTypeIds.downMod);
+                if (isAnswerVote &&
+                    upvoteOnAccept &&
+                    voteTypeId === voteTypeIds.acceptedByOwner) {
                     handlerPromises.push(handleAutovote(voteTypeIds.upMod, url, xhr));
+                }
+                if (isAnswerVote && upvoteQOnUpvoteA && voteTypeId === voteTypeIds.upMod) {
+                    handlerPromises.push(handleAutovote(voteTypeIds.upMod, questionUpvoteURL, xhr));
+                }
+                if (isAnswerVote &&
+                    downvoteQOnDownvoteA &&
+                    voteTypeId === voteTypeIds.downMod) {
+                    handlerPromises.push(handleAutovote(voteTypeIds.downMod, questionDownvoteURL, xhr));
                 }
                 isVTC = voteTypeId === voteTypeIds.close || /\/close\/add/.test(url);
                 if (downvoteOnClose && isVTC) {
-                    handlerPromises.push(handleAutovote(voteTypeIds.downMod, url, xhr));
+                    handlerPromises.push(handleAutovote(voteTypeIds.downMod, questionDownvoteURL, xhr));
                 }
                 return [4, Promise.all(handlerPromises)];
-            case 3:
+            case 5:
                 status = _a.sent();
                 if (!status) {
                     StackExchange.helpers.showToast("Something went wrong during autovote", { type: "danger" });
@@ -199,15 +230,18 @@ window.addEventListener("load", function () { return __awaiter(void 0, void 0, v
     return __generator(this, function (_a) {
         StackExchange === null || StackExchange === void 0 ? void 0 : StackExchange.ready(function () {
             initScriptConfiguration();
-            var voteTypeRegExp = /\/posts\/\d+\/vote\/(\d+)/;
+            var voteTypeRegExp = /\/posts\/(\d+)\/vote\/(\d+)/;
             $(document).ajaxComplete(function (_event, xhr, options) {
                 var url = options.url;
                 if (!url) {
                     console.debug("[".concat(scriptName, "] missing URL: ").concat(url));
                     return;
                 }
-                var _a = __read(voteTypeRegExp.exec(url) || [], 2), voteTypeId = _a[1];
-                handleVoteComplete(+voteTypeId, url, xhr);
+                var _a = __read(voteTypeRegExp.exec(url) || [], 3), postId = _a[1], voteTypeId = _a[2];
+                var postType = StackExchange.question.getQuestionId() === +postId
+                    ? "question"
+                    : "answer";
+                handleVoteComplete(+voteTypeId, postType, url, xhr);
             });
         });
         return [2];
